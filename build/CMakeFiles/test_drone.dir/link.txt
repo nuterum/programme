@@ -1,0 +1,1 @@
+/usr/bin/cc      CMakeFiles/test_drone.dir/src/test_drone.c.o  -o test_drone -rdynamic 

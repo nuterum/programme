@@ -1,0 +1,1 @@
+/usr/bin/cc      CMakeFiles/testYUV.dir/src/test_video_YUV420.c.o  -o testYUV -rdynamic -lRT_ARDrone -lRT_ARDrone_VideoStream -lX11 -lGL -lXxf86vm 

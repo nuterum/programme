@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <RT_ARDrone/RT_ARDrone.h>
-#include </home/camelin/labo/RT_ARDrone/tools/drone_videostream/src/glwindow.h>
+#include <RT_ARDrone_VideoStream/glwindow.h>
 
 //librairie pour la commande sleep
 #include <unistd.h>
 
-unsigned char* conv( YUV420Image* img) 
+unsigned char* convYUV( YUV420Image* img) 
 {
   	int  i,j;
   	int res;
@@ -83,15 +83,59 @@ unsigned char* conv( YUV420Image* img)
   	return pix;
 }
 
+unsigned char* convYUVtoRGB( unsigned char* picture) 
+{
+	int i;
+	int j;
+	int res;
+	int r,g,b,y,u,v;
+	unsigned char* img ;
+	
+	img=( unsigned char*) malloc (480 * 640 * 3) ;
+	
+	res=-1;
+	for(i=0;i<360;i++)
+		{
+			for(j=0;j<640;j=j+3)
+			{
+				if(i==0 && j!=0)
+				{
+					res=j;
+				}
+				else
+				{
+					if(j==0)
+					{
+						res=res+1;
+					}
+					else
+					{
+						res=i*j;
+					}
+				}			
+
+				img[res]=0;
+				img[res+1]=0;
+				img[res+2]=255;
+			} 
+		}
+	
+	return img;
+}
 
 int main ( int argc, char** argv, char** envv ) {
 
 	ARDrone* bob ;
 	GLWindow*   win ;
 	YUV420Image* img ;
+	//RGB24Image* img2 ;
 	unsigned char* picture;
+	unsigned char* stream;
+	int i;
 
 	img = YUV420Image_new(640,360) ; // ou 480
+	//img2 = RGB24Image_new(640,360);
+	
 	bob = ARDrone_new( "192.168.1.1" ) ;
 
 	ARDrone_connect( bob ) ;
@@ -104,16 +148,23 @@ int main ( int argc, char** argv, char** envv ) {
 
 	sleep(1);
 	
-	win = GLWindow_new ( "glview", 640, 360, 0 ) ;
+	win = GLWindow_new ("glview", 640, 360, 0 ) ;
 
 	while(1) 
 	{		
 
 		ARDrone_get_YUV420Image ( bob, img ) ;
 		
-		picture=conv( img );
+		picture=convYUV( img );
+		stream=convYUVtoRGB(picture) ;
+		for(i=0;i<30;i++)
+		{
+			printf("%d ",picture[i]);
+		}
 		
-		GLWindow_draw_rgb(win,picture );
+		//ARDrone_get_RGB24Image ( bob, img2 ) ;
+		
+		GLWindow_draw_rgb(win,stream ); //img2->pixels
 		
 		GLWindow_swap_buffers(win);
 		
@@ -126,11 +177,14 @@ int main ( int argc, char** argv, char** envv ) {
 		
 		}
 
+		printf("\n\n");
 		usleep( 50000 ) ;
+		//sleep(8);
 	}
 
 	ARDrone_free( bob ) ;
 	free(picture);
+	free(stream);
 
 
 	return 0 ;

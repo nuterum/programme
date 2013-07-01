@@ -1,0 +1,1 @@
+twttr.receiveCount({"count":0,"url":"http:\/\/ardrone-ailab-u-tokyo.blogspot.com\/2012\/11\/3-integration.html\/"});

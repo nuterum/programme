@@ -12,8 +12,8 @@ unsigned char* convYUV( YUV420Image* img)
   	int res;
   	unsigned char* pix;
 	int cpt = 0;
-	int startU = 640*360;
-	int startV = 640*360 * 5 /4;
+	// int startU = 640*364;
+	// int startV = 640*364* 5 /4;
 	
 	pix = ( unsigned char*) malloc (img->height * img->width * 3) ;
 /*
@@ -38,14 +38,14 @@ unsigned char* convYUV( YUV420Image* img)
 			V642 = img->pixels[startV];
 			startV++*/
 	
-	res=-1;		
-	for(i=0;i<360;i=i+2)
+	res=-1;
+	for(i=0;i<364;i=i+2)
 	{
 		for(j=0;j<640;j=j+2)
 		{
 			if(i==0 && j!=0)
 			{
-				res=j;
+				res=j*3;
 			}
 			else
 			{
@@ -55,26 +55,26 @@ unsigned char* convYUV( YUV420Image* img)
 				}
 				else
 				{
-					res=i*j;
+					res=i*j*3;
 				}
 			}
 			//D'abord les Y
 			pix[cpt] =img->pixels[res];	
 			pix[cpt+3] =img->pixels[res+1];	
-			pix[cpt+640] =img->pixels[res+640];
-			pix[cpt+643] =img->pixels[res+641];
+			pix[cpt+640] =img->pixels[res+2];
+			pix[cpt+643] =img->pixels[res+3];
 			//puis les U
-			pix[cpt+1]=img->pixels[startU];
-			pix[cpt+4]=img->pixels[startU];
-			pix[cpt+641]=img->pixels[startU];
-			pix[cpt+644]=img->pixels[startU];
-			startU++;
+			pix[cpt+1]=img->pixels[res+4];
+			pix[cpt+4]=img->pixels[res+4];
+			pix[cpt+641]=img->pixels[res+4];
+			pix[cpt+644]=img->pixels[res+4];
+			//startU++;
 			//et enfin les V
-			pix[cpt+2]=img->pixels[startV];
-			pix[cpt+5]=img->pixels[startV];
-			pix[cpt+642]=img->pixels[startV];
-			pix[cpt+645]=img->pixels[startV];
-			startV++;
+			pix[cpt+2]=img->pixels[res+5];
+			pix[cpt+5]=img->pixels[res+5];
+			pix[cpt+642]=img->pixels[res+5];
+			pix[cpt+645]=img->pixels[res+5];
+			//startV++;
 			//prochain groupe
 			cpt=cpt+6;
 		}
@@ -91,16 +91,16 @@ unsigned char* convYUVtoRGB( unsigned char* picture)
 	int r,g,b,y,u,v;
 	unsigned char* img ;
 	
-	img=( unsigned char*) malloc (480 * 640 * 3) ;
+	img=( unsigned char*) malloc (360 * 640 * 3) ;
 	
 	res=-1;
-	for(i=0;i<360;i++)
+	for(i=0;i<364;i++)
 		{
-			for(j=0;j<640;j=j+3)
+			for(j=0;j<640;j=j++)
 			{
 				if(i==0 && j!=0)
 				{
-					res=j;
+					res=j*3;
 				}
 				else
 				{
@@ -110,13 +110,23 @@ unsigned char* convYUVtoRGB( unsigned char* picture)
 					}
 					else
 					{
-						res=i*j;
+						res=i*j*3;
 					}
-				}			
+				}
+				y=picture[res];
+				u=picture[res+1];
+				v=picture[res+2];
+				
+				r = y + (int)1.402f*(u-128);
+				g = y - (int)(0.344f*(v-128) +0.714f*(u-128));
+				b = y + (int)1.772f*(v-128);
+				//r = r>255? 255 : r<0 ? 0 : r;
+				//g = g>255? 255 : g<0 ? 0 : g;
+				//b = b>255? 255 : b<0 ? 0 : b;
 
-				img[res]=0;
-				img[res+1]=0;
-				img[res+2]=255;
+				img[res]=(r<<16);
+				img[res+1]=(g<<8);
+				img[res+2]=b;
 			} 
 		}
 	
@@ -128,13 +138,13 @@ int main ( int argc, char** argv, char** envv ) {
 	ARDrone* bob ;
 	GLWindow*   win ;
 	YUV420Image* img ;
-	//RGB24Image* img2 ;
+	RGB24Image* img2 ;
 	unsigned char* picture;
 	unsigned char* stream;
-	int i;
+	//int i;
 
 	img = YUV420Image_new(640,360) ; // ou 480
-	//img2 = RGB24Image_new(640,360);
+	img2 = RGB24Image_new(640,360);
 	
 	bob = ARDrone_new( "192.168.1.1" ) ;
 
@@ -157,10 +167,10 @@ int main ( int argc, char** argv, char** envv ) {
 		
 		picture=convYUV( img );
 		stream=convYUVtoRGB(picture) ;
-		for(i=0;i<30;i++)
-		{
-			printf("%d ",picture[i]);
-		}
+		//for(i=0;i<30;i++)
+		//{
+		//	printf("%d ",picture[i]);
+		//}
 		
 		//ARDrone_get_RGB24Image ( bob, img2 ) ;
 		
@@ -177,7 +187,7 @@ int main ( int argc, char** argv, char** envv ) {
 		
 		}
 
-		printf("\n\n");
+		//printf("\n\n");
 		usleep( 50000 ) ;
 		//sleep(8);
 	}
